@@ -15,6 +15,7 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
     val itemsPerPage = 25
     var totalRows = 0
 
+    // Set new data and total rows
     fun setItemsAndTotalRows(newItems: MutableList<Item>, totalRows: Int) {
         items.clear()
         items.addAll(newItems)
@@ -22,6 +23,7 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
         notifyDataSetChanged()
     }
 
+    // Load data for a specific page
     fun loadPage(page: Int) {
         if (page in 0 until totalPages()) {
             currentPage = page
@@ -45,6 +47,7 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
         notifyDataSetChanged()
     }
 
+    // Calculate the total number of pages
     fun totalPages(): Int {
         var totalPages = totalRows / itemsPerPage
         val remainingRows = totalRows % itemsPerPage
@@ -54,25 +57,26 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
         return totalPages
     }
 
-    // 其他方法不需要修改，保持不变
-
+    // Create a ViewHolder
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_row_layout, parent, false)
         return ViewHolder(view)
     }
 
+    // Bind data to ViewHolder
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
         holder.bind(item)
     }
 
+    // Return the number of items in the list
     override fun getItemCount(): Int {
         return items.size
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // 在这里绑定视图元素和数据
+        // Bind view elements and data here
         fun bind(item: Item) {
             val listIdTextView: TextView = itemView.findViewById(R.id.listIdTextView)
             val nameTextView: TextView = itemView.findViewById(R.id.nameTextView)
@@ -82,15 +86,17 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
         }
     }
 
+    // Load the next page of data
     fun loadNextPage() {
-        if (currentPage < totalPages() - 1) {
+        if (currentPage < totalPages() - 1) { // Check if it's already the last page
             currentPage++
             loadPage(currentPage)
         }
     }
 
+    // Load the previous page of data
     fun loadPreviousPage() {
-        if (currentPage > 0) {
+        if (currentPage > 0) { // Check if it's already the first page
             currentPage--
             loadPage(currentPage)
         }

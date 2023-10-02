@@ -25,7 +25,6 @@ import org.json.JSONArray
 import java.io.IOException
 
 class SecondFragment : Fragment() {
-
     private var _binding: FragmentSecondBinding? = null
     private val binding get() = _binding!!
 
@@ -65,7 +64,7 @@ class SecondFragment : Fragment() {
                         if (adapter.currentPage > 0) {
                             adapter.loadPage(adapter.currentPage - 1)
                         } else {
-                            // 处理已经在第一页的情况
+                            // Handle the case when already on the first page
                         }
                     }
 
@@ -73,7 +72,7 @@ class SecondFragment : Fragment() {
                         if (adapter.currentPage < adapter.totalPages() - 1) {
                             adapter.loadPage(adapter.currentPage + 1)
                         } else {
-                            // 处理已经在最后一页的情况
+                            // Handle the case when already on the last page
                         }
                     }
 
@@ -82,11 +81,11 @@ class SecondFragment : Fragment() {
                         if (pageNumber != null && pageNumber >= 1 && pageNumber <= adapter.totalPages()) {
                             adapter.loadPage(pageNumber - 1)
                         } else {
-                            // 处理无效页数的情况
+                            // Handle the case of an invalid page number
                         }
                     }
 
-                    // 初始加载第一页数据
+                    // Load the initial data for the first page
                     loadDataAndUpdateAdapter(adapter, 0)
                 }
             } catch (e: Exception) {
@@ -97,7 +96,7 @@ class SecondFragment : Fragment() {
     }
 
     @SuppressLint("Range")
-    private fun loadDataAndUpdateAdapter(adapter: RecyclerViewAdapter, page: Int) {
+    fun loadDataAndUpdateAdapter(adapter: RecyclerViewAdapter, page: Int) {
         val dbHelper = context?.let { SQLiteHelper(it) }
         val db = dbHelper?.writableDatabase
         val startIndex = page * adapter.itemsPerPage
@@ -120,6 +119,7 @@ class SecondFragment : Fragment() {
         adapter.setItemsAndTotalRows(itemsList, calculateTotalRows(db))
     }
 
+    // Calculate the total number of rows in the database
     private fun calculateTotalRows(db: SQLiteDatabase?): Int {
         val query = "SELECT COUNT(*) FROM items"
         val cursor = db?.rawQuery(query, null)
@@ -133,6 +133,7 @@ class SecondFragment : Fragment() {
         return rowCount
     }
 
+    // Perform a network request to retrieve JSON data
     private suspend fun performRequest(): String = withContext(Dispatchers.IO) {
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -141,6 +142,7 @@ class SecondFragment : Fragment() {
 
         val maxRetries = 5
         var retries = 0
+
         var jsonData: String? = null
 
         while (retries < maxRetries) {
@@ -158,12 +160,13 @@ class SecondFragment : Fragment() {
             }
 
             retries++
-            kotlinx.coroutines.delay(1000)
+            kotlinx.coroutines.delay(1000) // Wait for 1 second before retrying
         }
 
         return@withContext ""
     }
 
+    // Insert JSON data into the database
     private fun insertJsonDataToDatabase(database: SQLiteDatabase, jsonData: String) {
         database.beginTransaction()
 
