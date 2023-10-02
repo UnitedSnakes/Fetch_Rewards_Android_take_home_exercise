@@ -1,15 +1,18 @@
+# Ignore Gradle build files
+.gradle/
+/build/
+
+# Ignore local configuration file (e.g., gradle.properties for API keys)
+gradle.properties
+
+# Ignore Android Studio's metadata files
+.idea/
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+
+# Ignore generated files
+build/
+captures/
+
+/test/
