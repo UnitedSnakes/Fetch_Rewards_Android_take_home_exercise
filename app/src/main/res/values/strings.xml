@@ -1,13 +1,18 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Android_Take_Home_Exercise_Shanglin_Yang</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
+    <string name="first_fragment_label">Home</string>
+    <string name="second_fragment_label">Json Data</string>
     <string name="retrieve">Retrieve</string>
     <string name="previous">Previous</string>
+    <string name="greetings">Good Day!</string>
 
-    <string name="retrieve_guidance">
-        Good Day!\n\nClick \"Retrieve\" to retrieve the data from\n\nhttps://fetch-hiring.s3.amazonaws.com/hiring.json
+    <string name="guidance">
+        Click \"Retrieve\" to retrieve the data from\n\nhttps://fetch-hiring.s3.amazonaws.com/hiring.json\n\nIt might take several seconds to load the data.
+    </string>
+
+    <string name="tech">
+        Interesting facts:\n\n-    Used SQLite for data storage\n\n-    Implemented retry logic for Internet connection errors
     </string>
 </resources>
