@@ -1,10 +1,10 @@
-package com.example.android_take_home_exercise_shanglin_yang
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.android_take_home_exercise_shanglin_yang.Item
+import com.example.android_take_home_exercise_shanglin_yang.R
 import java.util.Collections.min
 import kotlin.math.min
 
@@ -13,26 +13,48 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
     private var items: MutableList<Item> = mutableListOf()
     var currentPage = 0
     val itemsPerPage = 25
-
-    var totalPages = 0
     var totalRows = 0
 
-    fun calculateTotalPages(): Int {
-        var totalPages = totalRows / itemsPerPage
-        val remainingRows = totalRows % itemsPerPage // 计算余数
+    fun setItemsAndTotalRows(newItems: MutableList<Item>, totalRows: Int) {
+        items.clear()
+        items.addAll(newItems)
+        this.totalRows = totalRows
+        notifyDataSetChanged()
+    }
 
+    fun loadPage(page: Int) {
+        if (page in 0 until totalPages()) {
+            currentPage = page
+            val startIndex = currentPage * itemsPerPage
+            val endIndex = startIndex + itemsPerPage
+            if (startIndex < totalRows) {
+                val newItems = items.subList(startIndex, min(endIndex, totalRows))
+                clearItems()
+                addItems(newItems)
+            }
+        }
+    }
+
+    private fun clearItems() {
+        items.clear()
+        notifyDataSetChanged()
+    }
+
+    private fun addItems(newItems: List<Item>) {
+        items.addAll(newItems)
+        notifyDataSetChanged()
+    }
+
+    fun totalPages(): Int {
+        var totalPages = totalRows / itemsPerPage
+        val remainingRows = totalRows % itemsPerPage
         if (remainingRows > 0) {
-            totalPages += 1 // 如果有余数，则需要额外的一页
+            totalPages += 1
         }
         return totalPages
     }
 
-    fun setItems(newItems: MutableList<Item>) {
-        items.clear() // 清空现有数据
-        items.addAll(newItems) // 添加新数据
-        notifyDataSetChanged()
-    }
-
+    // 其他方法不需要修改，保持不变
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -61,42 +83,16 @@ class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>
     }
 
     fun loadNextPage() {
-        if (currentPage < totalPages - 1) { // 检查是否已经是最后一页
+        if (currentPage < totalPages() - 1) {
             currentPage++
             loadPage(currentPage)
         }
     }
 
     fun loadPreviousPage() {
-        if (currentPage > 0) { // 检查是否已经是第一页
+        if (currentPage > 0) {
             currentPage--
             loadPage(currentPage)
         }
-    }
-
-    // 加载指定页数据
-    fun loadPage(page: Int) {
-        if (page in 0 until totalPages) {
-            currentPage = page
-            val startIndex = currentPage * itemsPerPage
-            val endIndex = startIndex + itemsPerPage
-            if (startIndex < totalRows) {
-//                val newItems = items.subList(startIndex, min(endIndex, totalRows))
-                // 清空现有数据并添加新数据
-                loadDataAndUpdateAdapter(this, currentPage)
-                clearItems()
-                addItems(newItems)
-            }
-        }
-    }
-
-    private fun clearItems() {
-        items.clear()
-        notifyDataSetChanged()
-    }
-
-    private fun addItems(newItems: List<Item>) {
-        items.addAll(newItems)
-        notifyDataSetChanged()
     }
 }
