@@ -1,5 +1,6 @@
 package com.example.android_take_home_exercise_shanglin_yang
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
@@ -9,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.android_take_home_exercise_shanglin_yang.databinding.FragmentSecondBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -62,7 +65,16 @@ class SecondFragment : Fragment() {
                 // 假设你已经有了数据库实例 db 和格式化的 JSON 字符串 formattedJson
                 if (db != null) {
                     insertJsonDataToDatabase(db, jsonData)
-                    binding.txtJson.text = sortJsonData(db)
+
+                    val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
+                    val layoutManager = LinearLayoutManager(requireContext())
+                    recyclerView.layoutManager = layoutManager
+
+                    val adapter = RecyclerViewAdapter()
+                    recyclerView.adapter = adapter
+
+                    // 加载数据并更新适配器
+                    loadDataAndUpdateAdapter(adapter)
                 }
             } catch (e: Exception) {
                 // 处理请求或解析失败
@@ -72,34 +84,62 @@ class SecondFragment : Fragment() {
         }
     }
 
-    private fun sortJsonData(db: SQLiteDatabase): CharSequence? {
+    @SuppressLint("Range")
+    private fun loadDataAndUpdateAdapter(adapter: RecyclerViewAdapter) {
+        // 在这里执行从数据库加载数据的逻辑
+        // 例如，您可以从数据库查询数据，然后将数据添加到适配器中
+        // 每次加载25行数据，并在适配器中更新
+
+        val dbHelper = context?.let { SQLiteHelper(it) } // context is certainly non-null
+
+        val db = dbHelper?.writableDatabase
         val query =
             "SELECT * FROM items WHERE name IS NOT NULL AND name != '' ORDER BY listId ASC, name ASC"
-        val cursor = db.rawQuery(query, null)
+        val cursor = db?.rawQuery(query, null)
 
-        val itemsMap = mutableMapOf<Int, MutableList<String>>()
+        val itemsList = mutableListOf<Item>()
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 val listId = cursor.getInt(cursor.getColumnIndex("listId"))
                 val name = cursor.getString(cursor.getColumnIndex("name"))
-
-                // Put data into the itemsMap
-                if (!itemsMap.containsKey(listId)) {
-                    itemsMap[listId] = mutableListOf()
-                }
-                itemsMap[listId]?.add(name)
+                itemsList.add(Item(listId, name))
             }
             cursor.close()
         }
 
-        // Convert itemsMap to a JSON string
-
-        return JSONObject(itemsMap as Map<*, *>)
+        adapter.setItems(itemsList)
     }
 
+//    @SuppressLint("Range")
+//    private fun sortJsonData(db: SQLiteDatabase):  {
+//        val query =
+//            "SELECT * FROM items WHERE name IS NOT NULL AND name != '' ORDER BY listId ASC, name ASC"
+//        val cursor = db.rawQuery(query, null)
+//
+//        val itemsMap = mutableMapOf<Int, MutableList<String>>()
+//
+//        if (cursor != null) {
+//            while (cursor.moveToNext()) {
+//                val listId = cursor.getInt(cursor.getColumnIndex("listId"))
+//                val name = cursor.getString(cursor.getColumnIndex("name"))
+//
+//                // Put data into the itemsMap
+//                if (!itemsMap.containsKey(listId)) {
+//                    itemsMap[listId] = mutableListOf()
+//                }
+//                itemsMap[listId]?.add(name)
+//            }
+//            cursor.close()
+//        }
+//
+//        // Convert itemsMap to a JSON string
+//
+//        return JSONObject(itemsMap as Map<*, *>)
+//    }
 
-    private suspend fun performRequest(): JSONObject = withContext(Dispatchers.IO) {
+
+    private suspend fun performRequest(): String = withContext(Dispatchers.IO) {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("https://fetch-hiring.s3.amazonaws.com/hiring.json")
@@ -119,7 +159,7 @@ class SecondFragment : Fragment() {
                     jsonData = response.body?.string()
                     if (!jsonData.isNullOrBlank()) {
                         // 将JSON字符串转换为JSONObject
-                        return@withContext JSONObject(jsonData)
+                        return@withContext jsonData
                     }
                 }
             } catch (e: IOException) {
@@ -132,11 +172,11 @@ class SecondFragment : Fragment() {
         }
 
         // 如果请求失败或达到最大重试次数，返回空的JSONObject或其他适当的默认值
-        return@withContext JSONObject()
+        return@withContext ""
     }
 
 
-    private fun insertJsonDataToDatabase(database: SQLiteDatabase, jsonData: JSONObject) {
+    private fun insertJsonDataToDatabase(database: SQLiteDatabase, jsonData: String) {
         // 开始事务
         database.beginTransaction()
 
@@ -153,7 +193,7 @@ class SecondFragment : Fragment() {
                 val name = jsonObject.optString("name")
 
                 // 过滤掉name为空的项
-                if (!name.isNullOrBlank()) {
+                if (!name.isNullOrBlank() && name != "null") {
                     // 插入数据
                     val contentValues = ContentValues()
                     contentValues.put("listId", listId)
