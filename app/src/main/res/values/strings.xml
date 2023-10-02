@@ -15,4 +15,10 @@
     <string name="tech">
         Interesting facts:\n\n-    Used SQLite for data storage\n\n-    Implemented retry logic for Internet connection errors
     </string>
+    <string name="name">name</string>
+    <string name="listId">listId</string>
+    <string name="page_number">Page Number</string>
+    <string name="go_to_page">Go To Page</string>
+    <string name="previous_page">Previous Page</string>
+    <string name="next_page">Next Page</string>
 </resources>

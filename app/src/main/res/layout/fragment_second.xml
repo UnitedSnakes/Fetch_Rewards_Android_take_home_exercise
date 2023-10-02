@@ -11,19 +11,13 @@
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <Button
-            android:id="@+id/button_second"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/previous"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <LinearLayout
+            android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="16dp">
 
             <!-- 表头布局 -->
             <LinearLayout
@@ -35,15 +29,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="listId"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:text="@string/listId" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="name"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:text="@string/name" />
 
             </LinearLayout>
 
@@ -53,8 +47,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <EditText
+                android:id="@+id/pageNumberEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:hint="@string/page_number"
+                android:inputType="number"
+                android:maxLength="5"
+                android:minHeight="48dp" />
+
         </LinearLayout>
 
+        <Button
+            android:id="@+id/goToPageButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/go_to_page"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/nextPageButton"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+            app:layout_constraintHorizontal_weight="1" />
+
+        <Button
+            android:id="@+id/prevPageButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/previous_page"
+            app:layout_constraintEnd_toStartOf="@+id/goToPageButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/goToPageButton"
+            app:layout_constraintHorizontal_weight="1"
+            tools:ignore="VisualLintButtonSize" />
+
+        <Button
+            android:id="@+id/nextPageButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/next_page"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/goToPageButton"
+            app:layout_constraintHorizontal_weight="1" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

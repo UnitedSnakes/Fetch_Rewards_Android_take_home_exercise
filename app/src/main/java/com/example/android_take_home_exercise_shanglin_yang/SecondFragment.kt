@@ -9,7 +9,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.fragment.findNavController
+import android.widget.Button
+import android.widget.EditText
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android_take_home_exercise_shanglin_yang.databinding.FragmentSecondBinding
@@ -20,7 +21,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.IOException
 
 
@@ -42,6 +42,10 @@ class SecondFragment : Fragment() {
 
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
 
+        // This property is only valid between onCreateView and
+        // onDestroyView.
+        val binding = _binding!!
+
         return binding.root
 
     }
@@ -49,23 +53,19 @@ class SecondFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.buttonSecond.setOnClickListener {
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
-        }
+        val dbHelper = context?.let { SQLiteHelper(it) } // context is certainly non-null
+        val db = dbHelper?.writableDatabase
+
+        var jsonData: String = "" // 初始化为一个空字符串
 
         // 在协程作用域中执行网络请求
         GlobalScope.launch(Dispatchers.Main) {
             try {
-                val jsonData = performRequest()
-
-                // 更新 UI
-                val dbHelper = context?.let { SQLiteHelper(it) } // context is certainly non-null
-
-                val db = dbHelper?.writableDatabase
-                // 假设你已经有了数据库实例 db 和格式化的 JSON 字符串 formattedJson
-                if (db != null) {
+                jsonData = performRequest()
+                if (db != null && jsonData.isNotBlank()) {
                     insertJsonDataToDatabase(db, jsonData)
 
+                    // 移动以下按钮的点击监听器设置到这里
                     val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
                     val layoutManager = LinearLayoutManager(requireContext())
                     recyclerView.layoutManager = layoutManager
@@ -73,11 +73,52 @@ class SecondFragment : Fragment() {
                     val adapter = RecyclerViewAdapter()
                     recyclerView.adapter = adapter
 
-                    // 加载数据并更新适配器
-                    loadDataAndUpdateAdapter(adapter)
+
+                    // 点击事件监听器
+                    val pageNumberEditText: EditText? = view?.findViewById(R.id.pageNumberEditText)
+                    val goToPageButton: Button? = view?.findViewById(R.id.goToPageButton)
+                    val prevPageButton: Button? = view?.findViewById(R.id.prevPageButton)
+                    val nextPageButton: Button? = view?.findViewById(R.id.nextPageButton)
+
+// 向前翻页按钮点击事件处理
+                    prevPageButton?.setOnClickListener {
+                        if (adapter.currentPage > 0) {
+                            // 向前翻页
+                            adapter.loadPage(adapter.currentPage - 1)
+                        } else {
+                            // 处理已经在第一页的情况
+                            // 可以显示错误消息或采取其他操作
+                        }
+                    }
+
+// 向后翻页按钮点击事件处理
+                    nextPageButton?.setOnClickListener {
+                        if (adapter.currentPage < adapter.totalPages - 1) {
+                            // 向后翻页
+                            adapter.loadPage(adapter.currentPage + 1)
+                        } else {
+                            // 处理已经在最后一页的情况
+                            // 可以显示错误消息或采取其他操作
+                        }
+                    }
+
+// 指定页数按钮点击事件处理
+                    goToPageButton?.setOnClickListener {
+                        val pageNumber = pageNumberEditText?.text.toString().toIntOrNull()
+                        if (pageNumber != null && pageNumber >= 1 && pageNumber <= adapter.totalPages) {
+                            // 跳转到指定页数
+                            adapter.loadPage(pageNumber - 1)
+                        } else {
+                            // 处理无效页数的情况
+                            // 可以显示错误消息或采取其他操作
+                        }
+                    }
+
+                    // 初始加载第一页数据
+                    loadDataAndUpdateAdapter(adapter, 0)
+
                 }
             } catch (e: Exception) {
-                // 处理请求或解析失败
                 e.printStackTrace()
                 Log.e("InternetConnection", "Exception: ${e.message}", e)
             }
@@ -85,16 +126,18 @@ class SecondFragment : Fragment() {
     }
 
     @SuppressLint("Range")
-    private fun loadDataAndUpdateAdapter(adapter: RecyclerViewAdapter) {
+    fun loadDataAndUpdateAdapter(adapter: RecyclerViewAdapter, page: Int) {
         // 在这里执行从数据库加载数据的逻辑
         // 例如，您可以从数据库查询数据，然后将数据添加到适配器中
-        // 每次加载25行数据，并在适配器中更新
+        // 根据页数加载数据
 
         val dbHelper = context?.let { SQLiteHelper(it) } // context is certainly non-null
 
         val db = dbHelper?.writableDatabase
-        val query =
-            "SELECT * FROM items WHERE name IS NOT NULL AND name != '' ORDER BY listId ASC, name ASC"
+        val startIndex = page * adapter.itemsPerPage
+        val endIndex = startIndex + adapter.itemsPerPage
+
+        val query = "SELECT * FROM items WHERE name IS NOT NULL AND name != '' ORDER BY listId ASC, name ASC LIMIT $startIndex, ${adapter.itemsPerPage}"
         val cursor = db?.rawQuery(query, null)
 
         val itemsList = mutableListOf<Item>()
@@ -109,35 +152,23 @@ class SecondFragment : Fragment() {
         }
 
         adapter.setItems(itemsList)
+        fun calculateTotalRows(db: SQLiteDatabase?): Int {
+            val query = "SELECT COUNT(*) FROM items"
+            val cursor = db?.rawQuery(query, null)
+
+            var rowCount = 0
+
+            if (cursor != null && cursor.moveToFirst()) {
+                rowCount = cursor.getInt(0)
+                cursor.close()
+            }
+            return rowCount
+        }
+
+
+        adapter.totalRows = calculateTotalRows(db)
+        adapter.totalPages = adapter.calculateTotalPages()
     }
-
-//    @SuppressLint("Range")
-//    private fun sortJsonData(db: SQLiteDatabase):  {
-//        val query =
-//            "SELECT * FROM items WHERE name IS NOT NULL AND name != '' ORDER BY listId ASC, name ASC"
-//        val cursor = db.rawQuery(query, null)
-//
-//        val itemsMap = mutableMapOf<Int, MutableList<String>>()
-//
-//        if (cursor != null) {
-//            while (cursor.moveToNext()) {
-//                val listId = cursor.getInt(cursor.getColumnIndex("listId"))
-//                val name = cursor.getString(cursor.getColumnIndex("name"))
-//
-//                // Put data into the itemsMap
-//                if (!itemsMap.containsKey(listId)) {
-//                    itemsMap[listId] = mutableListOf()
-//                }
-//                itemsMap[listId]?.add(name)
-//            }
-//            cursor.close()
-//        }
-//
-//        // Convert itemsMap to a JSON string
-//
-//        return JSONObject(itemsMap as Map<*, *>)
-//    }
-
 
     private suspend fun performRequest(): String = withContext(Dispatchers.IO) {
         val client = OkHttpClient()
@@ -204,9 +235,6 @@ class SecondFragment : Fragment() {
 
             // 设置事务为成功，提交
             database.setTransactionSuccessful()
-//        } catch (e: Exception) {
-//            Log.e("JSONParsingError", "Error parsing JSON data: ${e.message}")
-//            throw IOException("Error parsing JSON data: ${e.message}")
         } finally {
             // 结束事务
             database.endTransaction()
